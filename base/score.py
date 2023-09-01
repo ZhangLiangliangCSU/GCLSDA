@@ -1,11 +1,8 @@
 from data.data import Data
 from util.conf import OptionConf
-from util.logger import Log
 from os.path import abspath
-from time import strftime, localtime, time
 
-
-class Recommender(object):
+class Score(object):
     def __init__(self, conf, training_set, test_set,i, **kwargs):
         self.i = i
         self.config = conf
@@ -18,15 +15,8 @@ class Recommender(object):
         self.lRate = float(self.config['learnRate'])
         self.reg = float(self.config['reg.lambda'])
         self.output = OptionConf(self.config['output.setup'])
-        current_time = strftime("%Y-%m-%d %H-%M-%S", localtime(time()))
-        self.model_log = Log(self.model_name, self.model_name + ' ' + current_time)
         self.result = []
         self.recOutput = []
-
-    def initializing_log(self):
-        self.model_log.add('### model configuration ###')
-        for k in self.config.config:
-            self.model_log.add(k + '=' + self.config[k])
 
     def print_model_info(self):
         print('Model:', self.config['model.name'])
@@ -66,7 +56,6 @@ class Recommender(object):
         pass
 
     def execute(self):
-        self.initializing_log()
         self.print_model_info()
         print('Initializing and building model...')
         self.build()

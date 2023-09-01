@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from base.graph_recommender import GraphRecommender
+from base.graph_score import GraphScore
 from util.conf import OptionConf
 from util.sampler import next_batch_pairwise
 from base.torch_interface import TorchGraphInterface
@@ -10,7 +10,7 @@ import numpy
 # GCLSDA
 
 
-class GCLSDA(GraphRecommender):
+class GCLSDA(GraphScore):
     def __init__(self, conf, training_set, test_set,i):
         super(GCLSDA, self).__init__(conf, training_set, test_set,i)
         self.i = i
@@ -43,17 +43,9 @@ class GCLSDA(GraphRecommender):
                 if n % 100==0 and n>0:
                     print('training:', epoch + 1, 'batch', n, 'rec_loss:', rec_loss.item(), 'cl_loss', cl_loss.item())
             with torch.no_grad():
-                # 获取嵌入表示？
                 self.user_emb, self.item_emb = self.model()
             self.fast_evaluation(epoch)
         self.user_emb, self.item_emb = self.best_user_emb, self.best_item_emb
-
-        # user_emb = self.user_emb.cpu().numpy()
-        # item_emb = self.item_emb.cpu().numpy()
-        # path_0 = 're/em/user_emb_{}.npy'.format(self.i)
-        # path_1 = 're/em/item_emb_{}.npy'.format(self.i)
-        # numpy.save(path_0, user_emb)
-        # numpy.save(path_1,item_emb)
 
     def cal_cl_loss(self, idx, user_view1,user_view2,item_view1,item_view2):
         u_idx = torch.unique(torch.Tensor(idx[0]).type(torch.long)).cuda()

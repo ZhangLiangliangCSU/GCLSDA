@@ -1,25 +1,23 @@
 import numpy
 import numpy as np
 import pandas as pd
-from base.recommender import Recommender
+from base.score import Score
 from data.ui_graph import Interaction
 from util.algorithm import find_k_largest
 from time import strftime, localtime, time
 from data.loader import FileIO
 from os.path import abspath
 
-from util.conf import ModelConf, OptionConf
 from util.evaluation import ranking_evaluation
 import sys
 
 from sklearn.metrics import roc_curve
 from sklearn.metrics import auc
-import matplotlib.pyplot as plt
 
-class GraphRecommender(Recommender):
+
+class GraphScore(Score):
     def __init__(self, conf, training_set, test_set,i, **kwargs):
-        super(GraphRecommender, self).__init__(conf, training_set, test_set,i, **kwargs)
-        # 183!,data里面读出来id2item==183;id2user==409
+        super(GraphScore, self).__init__(conf, training_set, test_set,i, **kwargs)
         self.i = i
         self.data = Interaction(conf, training_set, test_set)
         self.bestPerformance = []
@@ -31,7 +29,7 @@ class GraphRecommender(Recommender):
         np.save('item_id.npy', self.data.item)
 
     def print_model_info(self):
-        super(GraphRecommender, self).print_model_info()
+        super(GraphScore, self).print_model_info()
         # # print dataset statistics
         print('Training Set Size: (user number: %d, item number %d, interaction number: %d)' % (self.data.training_size()))
         print('Test Set Size: (user number: %d, item number %d, interaction number: %d)' % (self.data.test_size()))
@@ -58,34 +56,7 @@ class GraphRecommender(Recommender):
         rec_list = {}
         user_count = len(self.data.test_set)
 
-
-        # print(type(test_set))
-        # path = 'dataset/mydata/neg_test_0.txt'
-        # with open(path) as f:
-        #     for line in f.readlines():
-        #         line = line.strip().split()
-        # 读取配置
-        # conf = ModelConf('./conf/GCLSDA.conf')
-        # test_set = FileIO.load_data_set(conf['test.set'], conf['model.type'])
-        # # print(conf['test.set'])
-        # test_name = conf['test.set'][-10:-4]
-        # print(test_name)
-        # path = f"./dataset/mydata/ran_test_{self.i}.txt"
-        # with open(path) as f:
-        #     for line in f.readlines():
-        #         line = line.strip().split()
-        #         snoRNA = line[0]
-        #         disease = line[1]
-        #         sno_id = self.data.get_user_id(snoRNA)
-        #         dis_id = self.data.get_item_id(disease)
-        #         if sno_id is not None and dis_id is not None:
-        #             my_candidates = self.predict(snoRNA)
-        #             # print(disease)
-        #             # print(dis_id)
-        #             my_score = my_candidates[int(dis_id)]
-        #             act_list.append(int(line[2]))
-        #             pre_list.append(my_score)
-        # 获取预测
+        # get the prediction results
         act_list = []
         pre_list = []
         print(self.i)
@@ -109,26 +80,7 @@ class GraphRecommender(Recommender):
         path0 = 're/auc/auc_{}.txt'.format(self.i)
         print('roc_auc: ', roc_auc)
         np.savetxt(path0,np.array([roc_auc]))
-        # # 列表转为字典存入excel
-        # out_dic = {'real':act_list,'pre':pre_list}
-        # # print(out_dic)
-        # pd.DataFrame(out_dic).to_excel(path, sheet_name='Sheet1', index=False)
 
-        # plt.figure()
-        # lw = 2
-        # plt.plot(fpr, tpr, color='darkorange',
-        #          lw=lw, label='ROC curve (area = %0.2f)' % roc_auc)
-        # plt.plot([0, 1], [0, 1], color='navy', lw=lw, linestyle='--')
-        # plt.xlim([0.0, 1.0])
-        # plt.ylim([0.0, 1.05])
-        # plt.xlabel('False Positive Rate')
-        # plt.ylabel('True Positive Rate')
-        # plt.title('Receiver operating characteristic example')
-        # plt.legend(loc="lower right")
-        # plt.show()
-
-        # print(self.data.test_set)
-        # path2 = 're/matrix_{}'.format(self.i)
 
         for i, user in enumerate(self.data.test_set):
             # print('user:',user)
@@ -146,14 +98,6 @@ class GraphRecommender(Recommender):
         process_bar(user_count, user_count)
         print('')
 
-        # print(self.data.test_set)
-        # numpy.save('origin_0.npy', self.data.test_set)
-        # 对于验证集的预测结果，只有121个对应预测结果，test_0.txt有307个?集合去重
-        # print(rec_list)
-
-        # 获取结果预测矩阵
-        # pd.DataFrame(rec_list).to_excel(path2, sheet_name='Sheet1', index=False)
-        # numpy.save(path2,rec_list)
         return rec_list
 
     def evaluate(self, rec_list):
